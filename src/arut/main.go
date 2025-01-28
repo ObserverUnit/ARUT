@@ -2,7 +2,6 @@
 package main
 
 import (
-	"os"
 	"strings"
 
 	. "github.com/ObserverUnit/arut/src/ui"
@@ -25,11 +24,17 @@ type EditorWindow struct {
 	cursorX int
 	cursorY int
 	content []string
+	wm      *WindowManager
 }
 
-func newEditorWindow(screen tcell.Screen, width, height, x, y int) *EditorWindow {
-	inner := windows.NewBasicWindow(screen, width, height, x, y, "")
+func (w *EditorWindow) WindowManager() *WindowManager {
+	return w.wm
+}
+
+func newEditorWindow(wm *WindowManager, width, height, x, y int) *EditorWindow {
+	inner := windows.NewBasicWindow(wm, width, height, x, y, "")
 	return &EditorWindow{
+		wm:          wm,
 		BasicWindow: *inner,
 		mode:        EditorMode(Insert),
 		cursorX:     0,
@@ -115,23 +120,22 @@ func (w *EditorWindow) moveCursorBy(x, y int) {
 	}
 }
 
-func (w *EditorWindow) OnNormalModeKeyPress(event *tcell.Event) {
+func (w *EditorWindow) OnNormalModeEvent(event *tcell.Event) {
 	switch ev := (*event).(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
-		case tcell.KeyCtrlC:
-			w.Screen().Fini()
-			os.Exit(0)
 		case tcell.KeyRune:
 			switch key := ev.Rune(); key {
 			case 'i':
 				w.mode = EditorMode(Insert)
+			case ':':
+				w.wm.AddWindow(newCommandWindow(w.wm, 50, 50))
 			}
 		}
 	}
 }
 
-func (w *EditorWindow) OnInsertModeKeyPress(event *tcell.Event) {
+func (w *EditorWindow) OnInsertModeEvent(event *tcell.Event) {
 	switch ev := (*event).(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
@@ -162,9 +166,9 @@ func (w *EditorWindow) OnEvent(event *tcell.Event) {
 		default:
 			switch w.mode {
 			case EditorMode(Insert):
-				w.OnInsertModeKeyPress(event)
+				w.OnInsertModeEvent(event)
 			case EditorMode(Normal):
-				w.OnNormalModeKeyPress(event)
+				w.OnNormalModeEvent(event)
 			}
 		}
 	}
@@ -182,6 +186,10 @@ func (w *EditorWindow) Render() {
 	}
 
 	w.DrawRuneAtBody(w.cursorX, w.cursorY, char, nil, cursorStyle)
+}
+
+func (w *EditorWindow) close() {
+	w.wm.Close(w)
 }
 
 func main() {

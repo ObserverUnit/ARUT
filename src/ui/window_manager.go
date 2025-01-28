@@ -21,6 +21,14 @@ func (wm *WindowManager) RemoveWindow(w InteractiveWindow) error {
 	for i, window := range wm.windows {
 		if window == w {
 			wm.windows = append(wm.windows[:i], wm.windows[i+1:]...)
+
+			if w == wm.active {
+				if i >= 1 && i-1 < len(wm.windows) {
+					wm.active = wm.windows[i-1]
+				} else {
+					wm.active = nil
+				}
+			}
 			return nil
 		}
 	}
@@ -68,5 +76,12 @@ func NewWindowManager() (error, *WindowManager) {
 	return nil, &WindowManager{
 		Screen:  screen,
 		windows: []InteractiveWindow{},
+	}
+}
+
+// Closes a given window and removes it from the window manager, panics if the window is not found
+func (wm *WindowManager) Close(w InteractiveWindow) {
+	if err := wm.RemoveWindow(w); err != nil {
+		panic(err)
 	}
 }
