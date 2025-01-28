@@ -19,7 +19,7 @@ type Window interface {
 
 type InteractiveWindow interface {
 	Window
-	OnKeyPress(event *tcell.Event)
+	OnEvent(event *tcell.Event)
 }
 
 // based on height and width of the screen and the actual width and height of the terminal we can translate screen coordinates to the terminal coordinates

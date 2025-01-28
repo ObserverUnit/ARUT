@@ -1,54 +1,72 @@
 package ui
 
-import "github.com/gdamore/tcell"
+import (
+	"errors"
 
-var screen tcell.Screen = nil
-var open_windows []InteractiveWindow = nil
+	"github.com/gdamore/tcell"
+)
 
-func AddWindow[T InteractiveWindow](w T) T {
-	w.SetScreen(screen)
-	open_windows = append(open_windows, w)
-	return w
+type WindowManager struct {
+	tcell.Screen
+	windows []InteractiveWindow
+	active  InteractiveWindow
 }
 
-func ActiveWindow() InteractiveWindow {
-	return open_windows[len(open_windows)-1]
+func (wm *WindowManager) AddWindow(w InteractiveWindow) {
+	wm.windows = append(wm.windows, w)
+	wm.active = w
 }
 
-func SetActiveWindow(w InteractiveWindow) {
-	found := false
-	for i, window := range open_windows {
+func (wm *WindowManager) RemoveWindow(w InteractiveWindow) error {
+	for i, window := range wm.windows {
 		if window == w {
-			open_windows[i] = open_windows[len(open_windows)-1]
-			found = true
+			wm.windows = append(wm.windows[:i], wm.windows[i+1:]...)
+			return nil
 		}
 	}
 
-	if !found {
-		panic("window not found in current open windows")
-	}
-
-	open_windows[len(open_windows)-1] = w
+	return errors.New("window not found")
 }
 
-func Init() {
-	var err error = nil
-	screen, err = tcell.NewScreen()
+func (wm *WindowManager) render() {
+	for _, w := range wm.windows {
+		RenderWindow(w)
+	}
+}
+
+func (wm *WindowManager) onEvent(event *tcell.Event) {
+	wm.active.OnEvent(event)
+}
+
+func (wm *WindowManager) Run() {
+	defer wm.Fini()
+
+	for {
+		wm.Clear()
+		wm.render()
+		wm.Show()
+
+		ev := wm.PollEvent()
+		switch ev.(type) {
+		default:
+			wm.onEvent(&ev)
+		}
+	}
+}
+
+func NewWindowManager() (error, *WindowManager) {
+	screen, err := tcell.NewScreen()
 	if err != nil {
-		panic(err)
+		return err, nil
 	}
 
 	err = screen.Init()
 	if err != nil {
-		panic(err)
+		return err, nil
 	}
 
-}
-
-func Screen() tcell.Screen {
-	return screen
-}
-
-func OpenWindows() []InteractiveWindow {
-	return open_windows
+	return nil, &WindowManager{
+		Screen:  screen,
+		windows: []InteractiveWindow{},
+	}
 }

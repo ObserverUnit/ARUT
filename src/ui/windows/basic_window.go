@@ -137,7 +137,7 @@ func (w *BasicWindow) DrawRuneAtBody(x, y int, r rune, comb []rune, style tcell.
 
 	ui.DrawRuneAt(w, draw_x, draw_y, r, comb, style)
 }
-func NewBasicWindow(width, height, x, y int, content string) *BasicWindow {
+func NewBasicWindow(screen tcell.Screen, width, height, x, y int, content string) *BasicWindow {
 	if width < 0 || width > 100 {
 		panic("width must be between 0 and 100")
 	}
@@ -147,7 +147,7 @@ func NewBasicWindow(width, height, x, y int, content string) *BasicWindow {
 	}
 
 	window := &BasicWindow{
-		screen:  ui.Screen(),
+		screen:  screen,
 		content: content,
 		width:   0,
 		height:  0,

@@ -2,7 +2,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -28,8 +27,8 @@ type EditorWindow struct {
 	content []string
 }
 
-func newEditorWindow(width, height, x, y int) *EditorWindow {
-	inner := windows.NewBasicWindow(width, height, x, y, "")
+func newEditorWindow(screen tcell.Screen, width, height, x, y int) *EditorWindow {
+	inner := windows.NewBasicWindow(screen, width, height, x, y, "")
 	return &EditorWindow{
 		BasicWindow: *inner,
 		mode:        EditorMode(Insert),
@@ -148,7 +147,7 @@ func (w *EditorWindow) OnInsertModeKeyPress(event *tcell.Event) {
 	}
 }
 
-func (w *EditorWindow) OnKeyPress(event *tcell.Event) {
+func (w *EditorWindow) OnEvent(event *tcell.Event) {
 	switch ev := (*event).(type) {
 	case *tcell.EventKey:
 		switch ev.Key() {
@@ -186,28 +185,11 @@ func (w *EditorWindow) Render() {
 }
 
 func main() {
-	fmt.Println("Hello, world!")
-	Init()
-
-	window := AddWindow(newEditorWindow(100, 100, 50, 50))
-
-	SetActiveWindow(window)
-
-	defer Screen().Fini()
-
-	for {
-		Screen().Clear()
-
-		for _, w := range OpenWindows() {
-			RenderWindow(w)
-		}
-
-		Screen().Show()
-
-		ev := Screen().PollEvent()
-		switch ev.(type) {
-		default:
-			ActiveWindow().OnKeyPress(&ev)
-		}
+	err, wm := NewWindowManager()
+	if err != nil {
+		panic(err)
 	}
+
+	wm.AddWindow(newEditorWindow(wm, 100, 100, 50, 50))
+	wm.Run()
 }
