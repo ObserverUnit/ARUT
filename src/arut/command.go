@@ -1,30 +1,49 @@
 package main
 
 import (
-	"os"
+	"errors"
 	"strings"
 
 	"github.com/ObserverUnit/arut/src/ui"
 	"github.com/gdamore/tcell"
 )
 
+// an EditorWindow that can execute commands
 type CommandWindow struct {
 	EditorWindow
+	parent ui.InteractiveWindow
 }
 
-var commands = map[string]func(wm *ui.WindowManager, args []string){
-	"quit": func(wm *ui.WindowManager, args []string) {
+var commands = map[string]func(self *CommandWindow, args []string) error{
+	"quit": func(self *CommandWindow, args []string) error {
 		// TODO: rethink this design choice
 		// if for example we have an unsaved buffer in another window...
-		wm.Fini()
-		os.Exit(0)
+		self.wm.Quit(0)
+		return nil
+	},
+	"open": func(self *CommandWindow, args []string) error {
+		if len(args) < 1 {
+			return errors.New("Not enough arguments")
+		}
+		name := args[0]
+
+		window, err := newFileEditorWindow(self.wm, name, 100, 100, 50, 50)
+		if err != nil {
+			return err
+		}
+
+		self.wm.AddWindow(window)
+		self.Close()
+		self.parent.Close()
+		return nil
 	},
 }
 
-func newCommandWindow(wm *ui.WindowManager, x, y int) *CommandWindow {
-	inner := newEditorWindow(wm, 50, 15, x, y)
+func newCommandWindow(parent ui.InteractiveWindow, x, y int) *CommandWindow {
+	inner := newEditorWindow(parent.WindowManager(), 50, 15, x, y, "")
 	return &CommandWindow{
 		EditorWindow: *inner,
+		parent:       parent,
 	}
 }
 
@@ -43,7 +62,7 @@ func (w *CommandWindow) reset(message string) {
 func (w *CommandWindow) executeCommand() {
 	command := w.getCommand()
 	if len(command) == 0 || command[0] == "" {
-		w.close()
+		w.Close()
 		return
 	}
 
@@ -52,7 +71,22 @@ func (w *CommandWindow) executeCommand() {
 
 	for c, f := range commands {
 		if strings.Contains(strings.ToLower(c), strings.ToLower(cmd)) {
-			f(w.wm, args)
+			err := f(w, args)
+			if err != nil {
+				w.reset(err.Error())
+			}
+			return
+		}
+	}
+
+	for c := range w.parent.Commands() {
+		if strings.Contains(strings.ToLower(c), strings.ToLower(cmd)) {
+			response := w.parent.ExecCommand(c, args)
+			if response != "" {
+				w.reset(response)
+			} else {
+				w.Close()
+			}
 			return
 		}
 	}
@@ -60,7 +94,7 @@ func (w *CommandWindow) executeCommand() {
 	w.reset("Command not found")
 }
 
-func (w *CommandWindow) close() {
+func (w *CommandWindow) Close() {
 	// TODO: rethink this design choice
 	// close has to be overrided or it panics
 	w.wm.Close(w)
@@ -71,7 +105,7 @@ func (w *CommandWindow) OnEvent(event *tcell.Event) {
 	case *tcell.EventKey:
 		switch ev.Key() {
 		case tcell.KeyCtrlC:
-			w.close()
+			w.Close()
 		case tcell.KeyLeft:
 			w.moveCursorBy(-1, 0)
 		case tcell.KeyRight:

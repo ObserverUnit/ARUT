@@ -2,6 +2,7 @@
 package main
 
 import (
+	"iter"
 	"strings"
 
 	. "github.com/ObserverUnit/arut/src/ui"
@@ -31,15 +32,22 @@ func (w *EditorWindow) WindowManager() *WindowManager {
 	return w.wm
 }
 
-func newEditorWindow(wm *WindowManager, width, height, x, y int) *EditorWindow {
-	inner := windows.NewBasicWindow(wm, width, height, x, y, "")
+func newEditorWindow(wm *WindowManager, width, height, x, y int, content string) *EditorWindow {
+	lines := strings.Split(content, "\n")
+	if len(lines) == 0 {
+		lines = []string{""}
+	}
+
+	cursorY := len(lines) - 1
+	cursorX := len(lines[cursorY])
+	inner := windows.NewBasicWindow(wm, width, height, x, y, content)
 	return &EditorWindow{
 		wm:          wm,
 		BasicWindow: *inner,
 		mode:        EditorMode(Insert),
-		cursorX:     0,
-		cursorY:     0,
-		content:     []string{""},
+		cursorX:     cursorX,
+		cursorY:     cursorY,
+		content:     lines,
 	}
 }
 
@@ -120,6 +128,10 @@ func (w *EditorWindow) moveCursorBy(x, y int) {
 	}
 }
 
+func (w *EditorWindow) openCommandWindow() {
+	w.wm.AddWindow(newCommandWindow(w, 50, 50))
+}
+
 func (w *EditorWindow) OnNormalModeEvent(event *tcell.Event) {
 	switch ev := (*event).(type) {
 	case *tcell.EventKey:
@@ -129,7 +141,7 @@ func (w *EditorWindow) OnNormalModeEvent(event *tcell.Event) {
 			case 'i':
 				w.mode = EditorMode(Insert)
 			case ':':
-				w.wm.AddWindow(newCommandWindow(w.wm, 50, 50))
+				w.openCommandWindow()
 			}
 		}
 	}
@@ -188,8 +200,17 @@ func (w *EditorWindow) Render() {
 	w.DrawRuneAtBody(w.cursorX, w.cursorY, char, nil, cursorStyle)
 }
 
-func (w *EditorWindow) close() {
+func (w *EditorWindow) Close() {
 	w.wm.Close(w)
+}
+
+func (w *EditorWindow) Commands() iter.Seq[string] {
+	return func(yield func(string) bool) {
+	}
+}
+
+func (w *EditorWindow) ExecCommand(cmd string, args []string) string {
+	panic("Unreachable")
 }
 
 func main() {
@@ -198,6 +219,6 @@ func main() {
 		panic(err)
 	}
 
-	wm.AddWindow(newEditorWindow(wm, 100, 100, 50, 50))
+	wm.AddWindow(newEditorWindow(wm, 100, 100, 50, 50, ""))
 	wm.Run()
 }

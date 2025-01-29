@@ -1,6 +1,10 @@
 package ui
 
-import "github.com/gdamore/tcell"
+import (
+	"iter"
+
+	"github.com/gdamore/tcell"
+)
 
 type Window interface {
 	Screen() tcell.Screen
@@ -21,6 +25,9 @@ type InteractiveWindow interface {
 	Window
 	OnEvent(event *tcell.Event)
 	WindowManager() *WindowManager
+	Close()
+	Commands() iter.Seq[string]
+	ExecCommand(cmd string, args []string) string
 }
 
 // based on height and width of the screen and the actual width and height of the terminal we can translate screen coordinates to the terminal coordinates

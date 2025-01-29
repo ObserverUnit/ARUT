@@ -2,6 +2,7 @@ package ui
 
 import (
 	"errors"
+	"os"
 
 	"github.com/gdamore/tcell"
 )
@@ -84,4 +85,9 @@ func (wm *WindowManager) Close(w InteractiveWindow) {
 	if err := wm.RemoveWindow(w); err != nil {
 		panic(err)
 	}
+}
+
+func (wm *WindowManager) Quit(code int) {
+	wm.Fini()
+	os.Exit(code)
 }
