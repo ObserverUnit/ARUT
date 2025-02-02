@@ -15,18 +15,23 @@ type Window interface {
 	Position() (int, int)
 	// change the screen of the window
 	SetScreen(tcell.Screen)
-	// changes the size of the window
-	SetSize(int, int)
-	// changes the position of the window
-	SetPosition(int, int)
+	// changes the size of the window in actual coordinates
+	SetSize(wdith, height int)
+	// changes the position of the window in the screen in actual coordinates
+	SetPosition(x, y int)
 }
 
+// a Window that can be interacted with by an event or a command
 type InteractiveWindow interface {
 	Window
 	OnEvent(event *tcell.Event)
 	WindowManager() *WindowManager
+	// closes the window and cleans up all of it's resources
 	Close()
+	// returns the name of the commands that are executable on this window
 	Commands() iter.Seq[string]
+	// executes a command on this window and a response as a result
+	// may panic if the command is not implemented
 	ExecCommand(cmd string, args []string) string
 }
 

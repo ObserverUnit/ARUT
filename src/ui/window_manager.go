@@ -7,6 +7,7 @@ import (
 	"github.com/gdamore/tcell"
 )
 
+// a WindowManager is a collection of windows that can be rendered and interacted with
 type WindowManager struct {
 	tcell.Screen
 	windows []InteractiveWindow

@@ -5,6 +5,7 @@ import (
 	"github.com/gdamore/tcell"
 )
 
+// a basic window that can be written to as a string
 type BasicWindow struct {
 	screen        tcell.Screen
 	width, height int
@@ -55,7 +56,8 @@ func (w *BasicWindow) SetPosition(x, y int) {
 	}
 }
 
-// sets the size of the window
+// sets the size of the window in precentages of the screen taken
+// width and height must be between 0 and 100
 func (w *BasicWindow) SetSizeRelative(width, height int) {
 	max_width, max_height := w.Screen().Size()
 	if width < 0 || width > 100 {
@@ -118,6 +120,8 @@ func (w *BasicWindow) SetContent(content string) {
 	w.content = content
 }
 
+// draws a rune at the given position in the windows body (excluding the borders),
+// the position is fixed so that it is always inside the window x can be more than the width of the window but y must be less than the height of the window or it won't be drawn
 func (w *BasicWindow) DrawRuneAtBody(x, y int, r rune, comb []rune, style tcell.Style) {
 	draw_x, draw_y := x, y
 
@@ -137,6 +141,7 @@ func (w *BasicWindow) DrawRuneAtBody(x, y int, r rune, comb []rune, style tcell.
 
 	ui.DrawRuneAt(w, draw_x, draw_y, r, comb, style)
 }
+
 func NewBasicWindow(screen tcell.Screen, width, height, x, y int, content string) *BasicWindow {
 	if width < 0 || width > 100 {
 		panic("width must be between 0 and 100")

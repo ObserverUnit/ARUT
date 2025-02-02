@@ -19,6 +19,7 @@ const (
 
 var cursorStyle = tcell.StyleDefault.Reverse(true)
 
+// A wrapper around BasicWindow that allows the user to edit a buffer (the content of the window)
 type EditorWindow struct {
 	windows.BasicWindow
 	mode    EditorMode
@@ -175,6 +176,10 @@ func (w *EditorWindow) OnEvent(event *tcell.Event) {
 			w.moveCursorBy(0, -1)
 		case tcell.KeyDown:
 			w.moveCursorBy(0, 1)
+		case tcell.KeyEnd:
+			w.cursorX = len(w.content[w.cursorY])
+		case tcell.KeyHome:
+			w.cursorX = 0
 		default:
 			switch w.mode {
 			case EditorMode(Insert):
@@ -219,6 +224,7 @@ func main() {
 		panic(err)
 	}
 
-	wm.AddWindow(newEditorWindow(wm, 100, 100, 50, 50, ""))
+	helloWindow := newInitWindow(wm, 80, 80, 50, 50)
+	wm.AddWindow(helloWindow)
 	wm.Run()
 }
