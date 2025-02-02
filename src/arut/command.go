@@ -8,7 +8,7 @@ import (
 	"github.com/gdamore/tcell"
 )
 
-// an EditorWindow that can execute commands
+// an EditorWindow that can execute commands on a parent window
 type CommandWindow struct {
 	EditorWindow
 	parent ui.InteractiveWindow
@@ -40,7 +40,8 @@ var commands = map[string]func(self *CommandWindow, args []string) error{
 }
 
 func newCommandWindow(parent ui.InteractiveWindow, x, y int) *CommandWindow {
-	inner := newEditorWindow(parent.WindowManager(), 50, 15, x, y, "")
+	wm := parent.WindowManager()
+	inner := newEditorWindow(wm, 50, 15, x, y, "")
 	return &CommandWindow{
 		EditorWindow: *inner,
 		parent:       parent,
