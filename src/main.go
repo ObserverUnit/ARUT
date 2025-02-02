@@ -5,8 +5,8 @@ import (
 	"iter"
 	"strings"
 
-	. "github.com/ObserverUnit/arut/src/ui"
-	"github.com/ObserverUnit/arut/src/ui/windows"
+	. "github.com/ObserverUnit/arut/ui"
+	"github.com/ObserverUnit/arut/ui/windows"
 	"github.com/gdamore/tcell"
 )
 

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/ObserverUnit/arut/src/ui"
+	"github.com/ObserverUnit/arut/ui"
 	"github.com/gdamore/tcell"
 )
 
