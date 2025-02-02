@@ -10,7 +10,7 @@ import (
 	"github.com/gdamore/tcell"
 )
 
-var commands_table = map[string]func(self *FileEditorWindow, args []string) string{
+var fileWindowCommandsTable = map[string]func(self *FileEditorWindow, args []string) string{
 	"write": func(self *FileEditorWindow, args []string) string {
 		return self.write()
 	},
@@ -47,6 +47,10 @@ func (w *FileEditorWindow) write() string {
 	if err != nil {
 		return err.Error()
 	}
+	err = w.file.Truncate(0)
+	if err != nil {
+		return err.Error()
+	}
 
 	_, err = w.file.WriteString(content)
 
@@ -58,11 +62,11 @@ func (w *FileEditorWindow) write() string {
 }
 
 func (w *FileEditorWindow) Commands() iter.Seq[string] {
-	return maps.Keys(commands_table)
+	return maps.Keys(fileWindowCommandsTable)
 }
 
 func (w *FileEditorWindow) ExecCommand(cmd string, args []string) string {
-	return commands_table[cmd](w, args)
+	return fileWindowCommandsTable[cmd](w, args)
 }
 
 func (w *FileEditorWindow) openCommandWindow() {
